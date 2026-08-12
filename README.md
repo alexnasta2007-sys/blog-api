@@ -61,3 +61,12 @@ app/
 └── Services/
     ├── AuthService.php
     └── PostService.php
+```
+
+## Административная панель
+
+### Администратор
+
+Email: `admin@example.com`
+
+Пароль: `password123`
