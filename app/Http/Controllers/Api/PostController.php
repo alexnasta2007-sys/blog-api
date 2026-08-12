@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PostIndexRequest;
+use App\Http\Requests\StorePostRequest;
 use App\Services\PostService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
@@ -14,16 +15,11 @@ class PostController extends Controller
     ) {
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StorePostRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'text' => ['required', 'string'],
-        ]);
-
         $post = $this->postService->create(
             $request->user(),
-            $data
+            $request->validated()
         );
 
         return response()->json([
@@ -32,15 +28,9 @@ class PostController extends Controller
         ], 201);
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(PostIndexRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
-            'offset' => ['nullable', 'integer', 'min:0'],
-            'sort' => ['nullable', 'in:date,date_desc,title,title_desc'],
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date'],
-        ]);
+        $data = $request->validated();
 
         $posts = $this->postService->getAll(
             $data['limit'] ?? 10,
@@ -53,15 +43,9 @@ class PostController extends Controller
         return response()->json($posts);
     }
 
-    public function myPosts(Request $request): JsonResponse
+    public function myPosts(PostIndexRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'limit' => ['nullable', 'integer', 'min:1', 'max:100'],
-            'offset' => ['nullable', 'integer', 'min:0'],
-            'sort' => ['nullable', 'in:date,date_desc,title,title_desc'],
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date'],
-        ]);
+        $data = $request->validated();
 
         $posts = $this->postService->getMyPosts(
             $request->user(),

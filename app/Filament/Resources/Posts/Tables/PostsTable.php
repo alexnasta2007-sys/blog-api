@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Posts\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class PostsTable
@@ -13,7 +14,24 @@ class PostsTable
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable(),
+
+                TextColumn::make('title')
+                    ->label('Название')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('user.name')
+                    ->label('Автор')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('created_at')
+                    ->label('Дата публикации')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable(),
             ])
             ->filters([
                 //

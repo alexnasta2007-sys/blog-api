@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -14,15 +15,11 @@ class AuthController extends Controller
     ) {
     }
 
-    public function register(Request $request): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
-        ]);
-
-        $user = $this->authService->register($data);
+        $user = $this->authService->register(
+            $request->validated()
+        );
 
         $token = $user->createToken('api-token')->plainTextToken;
 
@@ -33,16 +30,11 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
-
         $token = $this->authService->login(
-            $data['email'],
-            $data['password']
+            $request->validated('email'),
+            $request->validated('password')
         );
 
         return response()->json([

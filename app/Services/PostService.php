@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 class PostService
 {
@@ -25,20 +26,15 @@ class PostService
     ): LengthAwarePaginator {
         $query = Post::query();
 
-        if ($dateFrom) {
-            $query->whereDate('created_at', '>=', $dateFrom);
-        }
-
-        if ($dateTo) {
-            $query->whereDate('created_at', '<=', $dateTo);
-        }
-
+        $this->applyDateFilter($query, $dateFrom, $dateTo);
         $this->applySorting($query, $sort);
 
         return $query
             ->with('user')
-            ->offset($offset)
-            ->paginate($limit);
+            ->paginate(
+                perPage: $limit,
+                page: $this->calculatePage($offset, $limit)
+            );
     }
 
     public function getMyPosts(
@@ -51,6 +47,20 @@ class PostService
     ): LengthAwarePaginator {
         $query = $user->posts();
 
+        $this->applyDateFilter($query, $dateFrom, $dateTo);
+        $this->applySorting($query, $sort);
+
+        return $query->paginate(
+            perPage: $limit,
+            page: $this->calculatePage($offset, $limit)
+        );
+    }
+
+    private function applyDateFilter(
+        Builder $query,
+        ?string $dateFrom,
+        ?string $dateTo
+    ): void {
         if ($dateFrom) {
             $query->whereDate('created_at', '>=', $dateFrom);
         }
@@ -58,22 +68,23 @@ class PostService
         if ($dateTo) {
             $query->whereDate('created_at', '<=', $dateTo);
         }
-
-        $this->applySorting($query, $sort);
-
-        return $query
-            ->offset($offset)
-            ->paginate($limit);
     }
 
-    private function applySorting($query, ?string $sort): void
-    {
+    private function applySorting(
+        Builder $query,
+        ?string $sort
+    ): void {
         match ($sort) {
             'title' => $query->orderBy('title', 'asc'),
             'title_desc' => $query->orderBy('title', 'desc'),
-            'date_desc', null => $query->orderBy('created_at', 'desc'),
             'date' => $query->orderBy('created_at', 'asc'),
+            'date_desc', null => $query->orderBy('created_at', 'desc'),
             default => $query->orderBy('created_at', 'desc'),
         };
+    }
+
+    private function calculatePage(int $offset, int $limit): int
+    {
+        return (int) floor($offset / $limit) + 1;
     }
 }
